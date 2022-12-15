@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>School Rank</title>
+    <link href="./layui/css/layui.css" rel="stylesheet">
+    <script src="./layui/layui.js"></script>
+    <style>
+        .home-header {
+            text-align: center;
+            height: 70px;
+            line-height: 70px;
+        }
+
+        .grid-demo-bg1 {
+            
+            background-color: #82a7e0; 
+            color: rgb(255, 255, 255);
+        }
+        .grid-demo-bg2 {
+            
+            background-color: #6278a1; 
+            color: rgb(255, 255, 255);
+        }
+
+        .grid-demo {
+            background-color: #628fd2;
+            color: rgb(255, 255, 255);
+        }
+
+
+        .home-title {
+            height: 50px;
+            line-height: 50px;
+            text-align: center;
+        }
+        .home-instruction {
+            height: 20px;
+            line-height: 20px;
+            text-align: left;
+        }
+        .grid-demo {
+            background-color: #628fd2;
+            color: rgb(255, 255, 255);
+        }
+
+
+        .home-title {
+            height: 50px;
+            line-height: 50px;
+            text-align: center;
+        }
+
+        .home-title-btn {
+            margin: 2% 0;
+        }
+
+        .home-title-btn > .layui-col-md3 > .layui-btn-fluid {
+            height: 50px;
+        }
+
+        .operate_type {
+            text-align: center;
+        }
+
+        .operate_type > .layui-col-md3 {
+            padding: 1% 0;
+        }
+
+        .operate_type_btn {
+            width: 160px;
+        }
+
+        .content-area {
+            background-color: #98a9dd;
+            height: auto;
+            color: #fff;
+            line-height: 100px;
+            text-align: center;
+            margin-bottom: 3%;
+            min-height: 300px;
+        }
+
+        .layui-sort-type {
+            padding: 1% 1%;
+        }
+
+        .add-city {
+            float: right;
+            width: 80px;
+        }
+
+        .nav-btn {
+            cursor: pointer;
+        }
+
+        .nav-btn:hover {
+            background-color: #bccaf1;
+        }
+    </style>
+</head>
+<body>
+
+<div class="layui-container">
+    <!--constructing the header with clickable buttons that jumps to different pages-->
+    <div class="layui-row">
+        <div class="layui-col-xs12 layui-col-md6">
+            <div class="grid-demo-bg1 home-header"></div>
+        </div>
+        <div class="layui-col-xs6 layui-col-md6">
+            <div class="layui-col-md3 home-header grid-demo nav-btn go-home">
+                Home Page
+            </div>
+            <div class="layui-col-md3 home-header grid-demo-bg1 nav-btn reset-btn">
+                Reset
+            </div>
+            <div class="layui-col-md3 home-header nav-btn grid-demo city-picker">
+                City Picker
+            </div>
+            <div class="layui-col-md3 home-header grid-demo-bg1 nav-btn my-cities">
+                My Cities
+            </div>
+        </div>
+    </div>
+    <!-- 8 factor buttons-->
+    <div class="layui-row operate_type">
+    </div>
+      <!-- 3 sub-buttons -->
+    <div class="layui-row">
+        <div class="layui-col-xs6 layui-sort-type">
+            <button type="button" class="layui-btn layui-btn-fluid select-btn" data-type="0">Ascending Order</button>
+        </div>
+        <div class="layui-col-xs6 layui-sort-type">
+            <button type="button" class="layui-btn layui-btn-fluid select-btn" data-type="1">Descending Order</button>
+        </div>
+    </div>
+    <div class="layui-row content-area">
+        <h1>No Maching Cities</h1>
+    </div>
+    <div id="demo20"></div>
+    <!--Instructions-->
+    <div class="layui-row home-title-btn">
+        <div class="layui-col-xs12 layui-col-md12">
+            <div class="grid-demo-bg2 home-instruction">***AHP = Average House Price (in U.S. dollar since the exchange rate varied)</div>
+            <div class="grid-demo-bg2 home-instruction">***Rest. = number of Chinese Restaurant</div>
+            <div class="grid-demo-bg2 home-instruction">***Pop. = Population</div>
+            <div class="grid-demo-bg2 home-instruction">***YAvgH = Yearly Average Highest Temperature (in Fahrenheit)</div>
+            <div class="grid-demo-bg2 home-instruction">***YAvgL = Yearly Average Lowest Temperature (in Fahrenheit)</div>
+            <div class="grid-demo-bg2 home-instruction">***S/F Ratio = Student Facauty Ratio</div>
+            <div class="grid-demo-bg2 home-instruction">***%asian = percent of Asian in the High School</div>
+            <div class="grid-demo-bg2 home-instruction">***%white = percent of White in the High School</div>
+            <div class="grid-demo-bg2 home-instruction">***%black = percent of Black in the High School</div>
+            <div class="grid-demo-bg2 home-instruction">***%Hispanic = percent of Hispanic in the High School</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var operated_type = sessionStorage.getItem('operated_type') != null ? sessionStorage.getItem('operated_type') : 0;
+    var operated_types = {};
+    var columns = []; //table header
+    var sortType = 0;//sorting: 0 for ascending and 1 for descending
+    var specialColumns = ['vCrime', 'pCrime', '%asian', '%white', '%black', '%hispanic', 'YAvgH', 'YAvgL'];
+    var selectType = 0//filtering type
+    var operateType = 8;//class size corresponding index
+    layui.use(['jquery', 'carousel', 'layer', 'laypage'], function () {
+        var $ = layui.$ 
+        var layer = layui.layer;
+        var laypage = layui.laypage;
+    
+        //rendering the 8 factor buttons
+        function showOperateTypes() {
+            $.post('./controller/index.php',
+                {className: 'home',actionName: 'getOperateData',},
+            function (res) {
+              
+                var operateData = res.data.typeArray;
+                var html = '';
+                operated_types = res.data.operated_types;
+                
+                //assign to corresponding html to the factor buttons
+                $.each(operateData, function (index, item) {
+                    console.log(item.id)
+                    if (operated_types[item.id]) {
+                        html += '<div class="layui-col-xs12 layui-col-md3">' +
+                            '<button type="button" data-type_id="' + item.id + '" class="layui-btn layui-btn-lg layui-btn-radius layui-btn-disabled operate_type_btn">' + item.name + '</button>' +
+                            '</div>';
+                    } 
+                    else {
+                        let fileName = item.name.replaceAll(' ', '_').toLowerCase();
+                        html += '<div class="layui-col-xs12 layui-col-md3">' +
+                            '<button type="button" data-file_name="'+fileName+'" data-type_id="' + item.id + '" data-anim="layui-anim-scaleSpring" class="layui-btn layui-btn-lg layui-btn-radius layui-btn-normal layui-anim operate_type_btn">' + item.name + '</button>' +
+                            '</div>';
+                    }
+                })
+                $('.operate_type').html(html);
+            }, 'json')
+        }
+
+        //when clicked the 8 factor buttons
+        $(document).on('click', '.operate_type_btn', function () {
+            var _this = $(this);
+            //cannot be clicked again if it been clicked
+            if (_this.hasClass('layui-btn-disabled')) {
+                return false;
+            }
+            //become grey disabled button
+            _this.removeClass('layui-btn-normal').removeClass('layui-anim').addClass('layui-btn-disabled');
+
+            operated_type = _this.data('type_id');
+            sessionStorage.setItem('operated_type', operated_type);
+            $.post('./controller/index.php',
+                {className: 'operateType', actionName: 'addOperateTypeToRecord', operate_type: operated_type},
+                function (res) {
+                    if (!'code' in res || res.code != 200) {
+                        layer.msg(res.msg);
+                        return;
+                    }
+                    //leading to corresponding html page
+                    window.location.href = './'+_this.data('file_name')+'.html';
+                }, 'json')
+        })
+
+        //display the 8 buttons
+        showOperateTypes();
+
+        //rendering the data table
+        function show_city_list(city_list, my_cities = []) {
+            //when no matching data
+            if (city_list.length == 0) {
+                layer.msg('NoMaching Cities');
+                $('.content-area').html('<h1>No Matching City</h1>');
+                $('.layui-laypage').remove();
+                return false;
+            }
+            var table_html = '<table class="layui-table">';
+            table_html += '<thead><tr>';
+            var column_count = 1;
+
+            //refering the table header
+            $.each(city_list[0], function (index) {
+                let btnStr = '';
+                if (specialColumns.indexOf(index) != -1) {
+                    btnStr = '<button type="button" class="layui-btn layui-btn-sm sort-btn" data-type="'+index+'">\n' +
+                        'sort' +
+                        '</button>';
+                }
+                table_html += '<th style="text-align: center">' + index + btnStr + '</th>';
+                if (columns.indexOf(index) == -1) {
+                    columns.push(index)
+                }
+                ++column_count;
+            })
+            table_html += '<th style="text-align: center;width: 100px">add city</th>';
+            table_html += ' </tr></thead>';
+            table_html += '<tbody id="city_list_data">';
+            table_html += '</tbody>';
+            table_html += '</table>';
+            $('.content-area').html(table_html);
+
+            //when there are too many city were listed, split them into multiple pages
+            laypage.render({
+                elem: 'demo20'
+                , count: city_list.length
+                , prev: 'previous'
+                , next: 'next'
+                , jump: function (obj) {
+                    //rendering the data
+                    document.getElementById('city_list_data').innerHTML = function () {
+                        var arr = []
+                            , thisData = city_list.concat().splice(obj.curr * obj.limit - obj.limit, obj.limit);
+                        layui.each(thisData, function (index, item) {
+                            var table_html = '<tr>';
+                            var column_num = 1;
+                            $.each(columns, function (k, column) {
+                                ++column_num;
+                                table_html += '<td>' + item[column] + '</td>';
+                            })
+                            //add button
+                            var add_city_html = '<button type="button" class="layui-btn layui-btn-normal layui-btn-radius add-city" data-city="' + item.City + '">Add</button>';
+                            //added buton
+                            var added_city_html = '<button type="button" class="layui-btn layui-btn-primary layui-btn-radius add-city" data-city="' + item.City + '">Added</button>';
+                            table_html += '<td style="text-align: center">' + (my_cities.indexOf(item.City) != -1 ? added_city_html : add_city_html) + '</td>';
+                            table_html += '</tr>';
+                            arr.push(table_html);
+                        });
+                        return arr.join('');
+                    }();
+                }
+            });
+        }
+        //the state when the button is selected
+        function setSelectedBtn() {
+            //$('.layui-row[data-type=5]')
+            $('.select-btn').removeClass('layui-btn-primary');
+            $('.select-btn[data-type='+ selectType +']').addClass('layui-btn-primary');
+        }
+        setSelectedBtn();
+
+        //obtain city data
+        function get_city_data(sortColumn = '', sortType = 0) {
+            let params = {
+                className: 'operateType',
+                actionName: 'getDataByOperate',
+                operateType: operateType,
+                selectType: selectType,
+                sortColumn: sortColumn,
+                sortType: sortType
+            };
+            $.post('./controller/index.php', params,
+                function (res) {
+                    if (!'code' in res || res.code != 200) {
+                        layer.msg(res.msg);
+                        return;
+                    }
+                    show_city_list(res.data.cities, res.data.myCities);
+                }, 'json')
+        }
+
+        //button corresponding sorting
+        $(document).on('click', '.select-btn', function () {
+            let _this = $(this);
+            selectType = _this.data('type');
+            setSelectedBtn();
+            get_city_data();
+        })
+
+        //click on the sorting button in the table
+        $(document).on('click', '.sort-btn', function () {
+            var _this = $(this);
+            sortType = (sortType == 1 ? 0 : 1);
+            var sortColumn = _this.data('type');
+            get_city_data(sortColumn, sortType);
+        })
+
+        //when click on home page
+        $(document).on('click', '.go-home', function () {
+            window.location.href = './index.html';
+        })
+         //when click on reset
+         $(document).on('click', '.reset-btn', function () {
+            $.post('controller/index.php?is_clear=1', '', function (res) {
+                window.location.reload();
+            }, 'json')
+        })
+        //when clicked on cityPicker
+        $(document).on('click', '.city-picker', function () {
+            window.location.href = './cityPicker.html';
+        })
+        //when clicked on myCities
+        $(document).on('click', '.my-cities', function () {
+            window.location.href = './myCities.html';
+        })
+
+        //store the added city data by calling the addCity.php
+        function add_city(city, type) {
+            $.post('./controller/addCity.php', {city, type}, function (res) {
+                layer.msg(res.msg);
+            }, 'json')
+        }
+
+        //when clicked the add button
+        $(document).on('click', '.add-city', function () {
+            var _this = $(this);
+            //0 for add，1 for un-add
+            var type = 0;
+            if (_this.hasClass('layui-btn-primary')) {
+                type = 1;
+                _this.removeClass('layui-btn-primary').addClass('layui-btn-normal').text('Add');
+            } else {
+                _this.removeClass('layui-btn-normal').addClass('layui-btn-primary').text('Added');
+            }
+
+            add_city(_this.data('city'), type)
+        })
+
+        //reseting data for the current page
+        function init_city_data() {
+            get_city_data();
+        }
+
+        init_city_data()
+    });
+
+</script>
+</body>
+</html>
+
+
+
+        
+
+
+    
