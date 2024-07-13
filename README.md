@@ -1,4 +1,7 @@
 # City Recommendation System
+## Introduction
+This is a small 2-month project designed to demonstrate my skills in web development and data collection. The project involves collecting data using a Python web scraper library, analyzing the data with Jupyter Notebook, and developing a frontend using PHP, JavaScript, and HTML. The City Recommendation System aims to provide users with insightful recommendations on the best cities to live in based on various factors such as real estate prices, school information, and weather conditions. By integrating multiple libraries and tools, this project showcases a comprehensive approach to data-driven web development.
+
 ## Library downloads
 1. The Layui Library can be downloaded from [Here](https://layui.itze.cn/)
 2. The Swiper Library can be downloaded from [Here](https://www.cdnpkg.com/Swiper/file/swiper.js/)
