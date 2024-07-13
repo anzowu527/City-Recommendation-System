@@ -1,4 +1,4 @@
-# Anqi-Wu-Senior-Project
+# City Recommendation System
 ## Library downloads
 1. The Layui Library can be downloaded from [Here](https://layui.itze.cn/)
 2. The Swiper Library can be downloaded from [Here](https://www.cdnpkg.com/Swiper/file/swiper.js/)
